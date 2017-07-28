@@ -10,12 +10,6 @@ void print_and_close(Sudoku *sudoku, FILE *f) {
   fclose(f);
 }
 
-void print_array(int *array) {
-  int i;
-  for(i = 0; i < GRID_SIZE; i++)
-    printf("%d ", array[i]);
-}
-
 int main(int argc, char **argv) {
   if(argc != 2) {
     fprintf(stderr, "No file provided\n");

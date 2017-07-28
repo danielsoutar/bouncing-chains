@@ -262,9 +262,13 @@ void print_sudoku(Sudoku *sudoku) {
 void destroy_sudoku(Sudoku *sudoku) {
   int **grid = sudoku->grid;
 
-  int row = 0;
-  for( ; row < GRID_SIZE; row++)
+  int row;
+  for(row = 0; row < GRID_SIZE; row++)
     free(grid[row]);
+
+  int cage;
+  for(cage = 0; cage < NUM_CAGES; cage++)
+    free(sudoku->cages[cage].elements);
 
   free(grid);
 }
