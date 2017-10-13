@@ -143,7 +143,6 @@ bool valid_cage_mapping(Cage *cages) {
       else
         bit_map[row][col] = 1;
     }
-    printf("\n");
   }
 
   //now need to check if bit map contains any 0s - i.e. missing any elements
