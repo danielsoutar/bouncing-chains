@@ -23,8 +23,7 @@ int ** allocate_grid() {
     exit(0);
   }
 
-  int i;
-  for(i = 0; i < GRID_SIZE; i++) {
+  for(int i = 0; i < GRID_SIZE; i++) {
     grid[i] = malloc(GRID_SIZE * sizeof(int));
     if(!grid[i]) {
       fprintf(stderr, "Malloc failed");
@@ -47,23 +46,6 @@ int ** get_grid(FILE *f) {
   }
 
   return grid;
-}
-
-int ** get_boxes(int **grid) {
-  int **boxes = allocate_grid();
-  int counters[GRID_SIZE];
-
-  int i;
-  for(i = 0; i < GRID_SIZE; i++)
-    counters[i] = 0;
-
-  int row, col;
-  int root = sqrt(GRID_SIZE);
-  for(row = 0; row < GRID_SIZE; row++)
-    for(col = 0; col < GRID_SIZE; col++)
-      boxes[col / root + row - row % root][counters[col / root + row - row % root]++] = grid[row][col];
-
-  return boxes;
 }
 
 int * reallocate_block(int *block, int t) {
@@ -99,7 +81,7 @@ Cage * get_cages(FILE *f) {
     int size = 0, sum = 0, t = 1;
     cage.elements = malloc(2 * sizeof(int) * t);
     int index = 0;
-    if(fscanf(f, "size %d\n", &size) == 1)
+    if(fscanf(f, "size %d\n", &size) == 1) {
       if(fscanf(f, "sum %d\n", &sum) == 1) {
         while(fscanf(f, "%d %d\n", &cage.elements[index], &cage.elements[index+1]) == 2) {
           index += 2, t++;
@@ -116,6 +98,7 @@ Cage * get_cages(FILE *f) {
       }
       else
         exit(0);
+    }
     else
       break;
   }
@@ -129,14 +112,10 @@ Cage * get_cages(FILE *f) {
 //need to prove that every x,y pair in cages corresponds to exactly one square in grid
 
 bool valid_cage_mapping(Cage *cages) {
-  bool bit_map[GRID_SIZE][GRID_SIZE];
-  int i, j, x, y;
-  for(x = 0; x < GRID_SIZE; x++)
-    for(y = 0; y < GRID_SIZE; y++)
-      bit_map[x][y] = 0;
+  int **bit_map = allocate_grid();
 
-  for(i = 0; i < NUM_CAGES; i++) {
-    for(j = 0; j < cages[i].cage_size * 2; j += 2) {
+  for(int i = 0; i < NUM_CAGES; i++) {
+    for(int j = 0; j < cages[i].cage_size * 2; j += 2) {
       int row = cages[i].elements[j], col = cages[i].elements[j + 1];
       if(bit_map[row][col] == 1)
         return 0;
@@ -146,10 +125,15 @@ bool valid_cage_mapping(Cage *cages) {
   }
 
   //now need to check if bit map contains any 0s - i.e. missing any elements
-  for(x = 0; x < GRID_SIZE; x++)
-    for(y = 0; y < GRID_SIZE; y++)
+  for(int x = 0; x < GRID_SIZE; x++)
+    for(int y = 0; y < GRID_SIZE; y++)
       if(bit_map[x][y] == 0)
         return 0;
+
+  for (int i = 0; i < count; ++i)
+    free(bit_map[i]);
+
+  free(bit_map);
 
   return 1;
 }

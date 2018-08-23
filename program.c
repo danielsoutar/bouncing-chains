@@ -29,32 +29,32 @@ int main(int argc, char **argv) {
 
   Cage *cages = get_cages(f);
 
-  int **boxes = get_boxes(grid);
+  // int **boxes = get_boxes(grid);
 
-  Sudoku *sudoku = construct_sudoku(grid, cages, boxes);
-  if(!valid_cage_mapping(cages)) {
-    fprintf(stderr, "INVALIDPROBLEM");
+  Sudoku *sudoku = construct_sudoku(grid, cages);
+
+  // if(!valid_cage_mapping(cages)) {
+  //   fprintf(stderr, "INVALIDPROBLEM");
+  //   exit(0);
+  // }
+  // else
+  //   printf("Valid mapping!\n");
+
+  int *array = calloc(1, GRID_SIZE * sizeof(int));
+  if(!array) {
+    fprintf(stderr, "Calloc failed");
     exit(0);
   }
-  else
-    printf("Valid mapping!\n");
 
-  int array[GRID_SIZE];
-  int a;
-  for (a = 0; a < GRID_SIZE; a++)
-    array[a] = 0;
+  // for(int i = 0; i < NUM_CAGES; i++) {
+  //   if(!check_cage(sudoku, i, array)) {
+  //     printf("INVALIDSOL\n");
+  //     exit(0);
+  //   }
+  // }
+  // printf("Valid cages!\n");
 
-  int i;
-  for(i = 0; i < NUM_CAGES; i++) {
-    if(!check_cage(sudoku, i, array)) {
-      printf("INVALIDSOL\n");
-      exit(0);
-    }
-  }
-  printf("Valid cages!\n");
-
-  int x;
-  for(x = 0; x < GRID_SIZE; x++) {
+  for(int x = 0; x < GRID_SIZE; x++) {
     if(!check_row(sudoku, x, array) || !check_col(sudoku, x, array) || !check_box(sudoku, x, array)) {
       printf("INVALIDSOL\n");
       exit(0);
@@ -65,12 +65,22 @@ int main(int argc, char **argv) {
   if(is_complete(sudoku)) {
     printf("SOLVED\n");
     print_and_close(sudoku, f);
-    exit(0);
   }
   else {
     printf("INCOMPLETE\n");
     solve(sudoku, 0, 0, array);
+
+    for(int x = 0; x < GRID_SIZE; x++) {
+      if(!verify_row(sudoku, x, array) || !verify_col(sudoku, x, array) || !verify_box(sudoku, x, array)) {
+        printf("INVALIDSOL\n");
+        exit(0);
+      }
+    }
+
+    int a = sudoku->grid[0][0];
+    int b = sudoku->grid[0][1];
+    int c = sudoku->grid[0][2];
+    // sum += (a * 100) + (b * 10) + c;
     print_and_close(sudoku, f);
-    exit(0);
   }
 }

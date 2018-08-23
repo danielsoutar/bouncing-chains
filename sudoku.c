@@ -3,18 +3,10 @@
 #include <math.h>
 #include "sudoku.h"
 
-Sudoku * construct_sudoku(int **grid, Cage *cages, int **boxes) {
+Sudoku * construct_sudoku(int **grid, Cage *cages) {
   Sudoku *sudoku = calloc(1, sizeof(Sudoku));
   
   sudoku->grid = grid;
-  sudoku->boxes = boxes;
-  int row, col;
-  for(row = 0; row < GRID_SIZE; row++) {
-    for(col = 0; col < GRID_SIZE; col++) {
-      sudoku->grid[row][col] = grid[row][col];
-      sudoku->boxes[row][col] = boxes[row][col];
-    }
-  }
 
   sudoku->cages = cages;
 
@@ -30,10 +22,25 @@ void reset(int *duplicates) {
 bool check_row(Sudoku *sudoku, int row, int *duplicates) {
   reset(duplicates);
   int **grid = sudoku->grid;
-  int col;
-  for(col = 0; col < GRID_SIZE; col++) {
+
+  for(int col = 0; col < GRID_SIZE; col++) {
     if(grid[row][col] == 0)
       continue;
+    else if(duplicates[grid[row][col] - 1] == 1)
+      return 0;
+    else
+      duplicates[grid[row][col] - 1] = 1;
+  }
+  return 1;
+}
+
+bool verify_row(Sudoku *sudoku, int row, int *duplicates) {
+  reset(duplicates);
+  int **grid = sudoku->grid;
+
+  for(int col = 0; col < GRID_SIZE; col++) {
+    if(grid[row][col] == 0)
+      return 0;
     else if(duplicates[grid[row][col] - 1] == 1)
       return 0;
     else
@@ -45,8 +52,8 @@ bool check_row(Sudoku *sudoku, int row, int *duplicates) {
 bool check_col(Sudoku *sudoku, int col, int *duplicates) {
   reset(duplicates);
   int **grid = sudoku->grid;
-  int row;
-  for(row = 0; row < GRID_SIZE; row++) {
+
+  for(int row = 0; row < GRID_SIZE; row++) {
     if(grid[row][col] == 0)
       continue;
     else if(duplicates[grid[row][col] - 1] == 1)
@@ -57,19 +64,85 @@ bool check_col(Sudoku *sudoku, int col, int *duplicates) {
   return 1;
 }
 
-bool check_box(Sudoku *sudoku, int box, int *duplicates) {
+bool verify_col(Sudoku *sudoku, int col, int *duplicates) {
   reset(duplicates);
-  int **boxes = sudoku->boxes;
-  int b;
-  for(b = 0; b < GRID_SIZE; b++) {
-    if(boxes[box][b] == 0)
-      continue;
-    else if(duplicates[boxes[box][b] - 1] == 1)
+  int **grid = sudoku->grid;
+
+  for(int row = 0; row < GRID_SIZE; row++) {
+    if(grid[row][col] == 0)
+      return 0;
+    else if(duplicates[grid[row][col] - 1] == 1)
       return 0;
     else
-      duplicates[boxes[box][b] - 1] = 1;
+      duplicates[grid[row][col] - 1] = 1;
   }
-  return 1;    
+  return 1;
+}
+
+bool check_box(Sudoku *sudoku, int box, int *duplicates) {
+  int root = sqrt(GRID_SIZE);
+
+  reset(duplicates);
+  int **grid = sudoku->grid;
+
+  for(int b = 0; b < GRID_SIZE; b++) {
+    // get row and col from box and b
+    int row = -1, col = -1;
+
+    int temp_box = box, temp_b = b;
+
+    // calculate col
+    col = (temp_box % 3) * 3 + (temp_b % 3);
+
+    while(temp_box % 3 != 0)
+      temp_box--;
+    while(temp_b % 3 != 0)
+      temp_b--;
+
+    row = temp_box + (int)(temp_b / root);
+
+    int element = grid[row][col];
+    if(element == 0)
+      continue;
+    else if(duplicates[element - 1] == 1)
+      return 0;
+    else
+      duplicates[element - 1] = 1;
+  }
+  return 1;
+}
+
+bool verify_box(Sudoku *sudoku, int box, int *duplicates) {
+  int root = sqrt(GRID_SIZE);
+
+  reset(duplicates);
+  int **grid = sudoku->grid;
+
+  for(int b = 0; b < GRID_SIZE; b++) {
+
+    // get row and col from box and b
+    int row = -1, col = -1;
+
+    int temp_box = box, temp_b = b;
+
+    // calculate col
+    col = (temp_box % 3) * 3 + (temp_b % 3);
+
+    while(temp_box % 3 != 0)
+      temp_box--;
+    while(temp_b % 3 != 0)
+      temp_b--;
+
+    row = temp_box + (int)(temp_b / root);
+
+    if(grid[row][col] == 0)
+      return 0;
+    else if(duplicates[grid[row][col] - 1] == 1)
+      return 0;
+    else
+      duplicates[grid[row][col] - 1] = 1;
+  }
+  return 1;
 }
 
 bool valid_sum(Sudoku *sudoku, int cage) {
@@ -78,8 +151,8 @@ bool valid_sum(Sudoku *sudoku, int cage) {
   int **grid = sudoku->grid;
   Cage c = sudoku->cages[cage];
   int size = c.cage_size;
-  int i, sum = 0;
-  for(i = 0; i < size * 2; i += 2) {
+  int sum = 0;
+  for(int i = 0; i < size * 2; i += 2) {
     int row = c.elements[i], col = c.elements[i + 1];
     int element = grid[row][col];
     if(element)
@@ -101,14 +174,13 @@ bool no_duplicates(Sudoku *sudoku, int cage, int *duplicates) {
   int **grid = sudoku->grid;
   Cage c = sudoku->cages[cage];
   int size = c.cage_size;
-  int i;
-  for(i = 0; i < size * 2; i += 2) {
+  for(int i = 0; i < size * 2; i += 2) {
     int row = c.elements[i], col = c.elements[i + 1];
     int element = grid[row][col];
     if(element == 0)
       continue;
     else if(duplicates[element - 1] == 1)
-      return false;
+      return 0;
     else
       duplicates[element - 1] = 1;
   }
@@ -142,12 +214,10 @@ bool is_complete(Sudoku *sudoku) {
 
 
 int get_cage_index(Sudoku *sudoku, int row, int col) {
-  int cage_i;
-  for(cage_i = 0; cage_i < NUM_CAGES; cage_i++) {
+  for(int cage_i = 0; cage_i < NUM_CAGES; cage_i++) {
     Cage c = sudoku->cages[cage_i];
     int size = c.cage_size * 2;
-    int e;
-    for(e = 0; e < size; e += 2) {
+    for(int e = 0; e < size; e += 2) {
       int cage_row = c.elements[e];
       int cage_col = c.elements[e + 1];
       int delta_row = abs(row - cage_row);
@@ -170,8 +240,8 @@ bool valid_cell(Sudoku *sudoku, int row, int col, int *duplicates) {
 
   if(check_row(sudoku, row, duplicates) && 
      check_col(sudoku, col, duplicates) && 
-     check_box(sudoku, box, duplicates) && 
-     check_cage(sudoku, get_cage_index(sudoku, row, col), duplicates))
+     check_box(sudoku, box, duplicates))/* && 
+     check_cage(sudoku, get_cage_index(sudoku, row, col), duplicates))*/
     return 1;
   else
     return 0;
@@ -214,8 +284,8 @@ bool solve(Sudoku *sudoku, int row, int col, int *duplicates) {
   bool solved = 1;
   bool is_end = end(row, col);
   if(locked) {
-    print_sudoku(sudoku);
-    printf("row: %d, col: %d\n", row, col);
+    // print_sudoku(sudoku);
+    // printf("row: %d, col: %d\n", row, col);
     if(!valid_cell(sudoku, row, col, duplicates))
       return !solved;
     else if(is_end)
@@ -230,8 +300,8 @@ bool solve(Sudoku *sudoku, int row, int col, int *duplicates) {
     int cell[2] = {0};
     get_next(cell, row, col);
     for(sudoku->grid[row][col] = 1; sudoku->grid[row][col] < VALUE_LIMIT; sudoku->grid[row][col]++) {
-      print_sudoku(sudoku);
-      printf("row: %d, col: %d\n", row, col);
+      // print_sudoku(sudoku);
+      // printf("row: %d, col: %d\n", row, col);
       if(valid_cell(sudoku, row, col, duplicates)) {
         if(is_end)
           return solved;
@@ -247,13 +317,14 @@ bool solve(Sudoku *sudoku, int row, int col, int *duplicates) {
 void print_sudoku(Sudoku *sudoku) {
   int **grid = sudoku->grid;
   int row, col;
-  printf("\033[2J\033[1;1H");
+  // printf("\033[2J\033[1;1H");
+  printf("9\n");
   for(row = 0; row < GRID_SIZE; row++) {
     for(col = 0; col < GRID_SIZE; col++) {
       if(grid[row][col] > 0)
-        printf(" %d ", grid[row][col]);
+        printf("%d ", grid[row][col]);
       else
-        printf(" _ ");
+        printf("0 ");
     }
     printf("\n");
   }
@@ -261,14 +332,14 @@ void print_sudoku(Sudoku *sudoku) {
 
 void destroy_sudoku(Sudoku *sudoku) {
   int **grid = sudoku->grid;
+  Cage *cages = sudoku->cages;
 
-  int row;
-  for(row = 0; row < GRID_SIZE; row++)
+  for(int row = 0; row < GRID_SIZE; row++)
     free(grid[row]);
 
-  int cage;
-  for(cage = 0; cage < NUM_CAGES; cage++)
-    free(sudoku->cages[cage].elements);
+  for(int cage = 0; cage < NUM_CAGES; cage++)
+    free(cages[cage].elements);
 
   free(grid);
+  free(cages);
 }

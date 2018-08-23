@@ -15,13 +15,12 @@ extern int VALUE_LIMIT;
 
 typedef struct Sudoku {
   int** grid;
-  Cage* cages;  //elements of a cage are triples of {row, col}
-  int** boxes;
+  Cage* cages;  //elements of a cage are tuples of {row, col}
 } Sudoku;
 
 //Functions
 
-Sudoku * construct_sudoku(int **grid, Cage *cages, int **boxes);
+Sudoku * construct_sudoku(int **grid, Cage *cages);
 
 void print_sudoku(Sudoku *sudoku);
 
@@ -33,6 +32,10 @@ void destroy_sudoku(Sudoku *sudoku);
 bool check_row(Sudoku *sudoku, int row, int *a);
 bool check_col(Sudoku *sudoku, int col, int *a);
 bool check_box(Sudoku *sudoku, int box, int *a);
+
+bool verify_row(Sudoku *sudoku, int row, int *a);
+bool verify_col(Sudoku *sudoku, int col, int *a);
+bool verify_box(Sudoku *sudoku, int box, int *a);
 
 bool check_cage(Sudoku *sudoku, int cage, int *a);
 bool valid_sum(Sudoku *sudoku, int cage);
