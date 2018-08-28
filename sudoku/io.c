@@ -130,7 +130,7 @@ bool valid_cage_mapping(Cage *cages) {
       if(bit_map[x][y] == 0)
         return 0;
 
-  for (int i = 0; i < count; ++i)
+  for (int i = 0; i < GRID_SIZE; ++i)
     free(bit_map[i]);
 
   free(bit_map);
